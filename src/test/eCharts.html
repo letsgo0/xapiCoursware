@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts"></script>
+</head>
+
+<body>
+    <!-- 为ECharts准备一个具备大小的Dom -->
+    <div class="col-md-12">
+        <div class="panel panel-default ">
+            <header class="panel-heading">
+                关系图 :
+            </header>
+            <div class="panel-body ">
+                <div id="graph" style="width: 100%;height:600px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        data = [
+            { name: '苹果', category: 1, id: 0 },
+            { name: '梨子', catagory: 1, id: 1 },
+            { name: '水果', category: 2, id: 2 }
+        ]
+        links = [
+            { source: 0, target: 2, category: 0, value: '属于', symbolSize: 10 },
+            { source: 1, target: 2, category: 0, value: '属于', symbolSize: 10 }
+        ]
+        var myChart = echarts.init(document.getElementById('graph'));
+
+        option = {
+            title: {
+                text: ''
+            },
+            tooltip: {},
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            label: {
+                normal: {
+                    show: true,
+                    textStyle: {
+                        fontSize: 12
+                    },
+                }
+            },
+            legend: {
+                x: "center",
+                show: false
+            },
+            series: [
+
+                {
+                    type: 'graph',
+                    layout: 'force',
+                    symbolSize: 45,
+                    focusNodeAdjacency: true,
+                    roam: true,
+                    edgeSymbol: ['none', 'arrow'],
+                    categories: [{
+                        name: '查询实体',
+                        itemStyle: {
+                            normal: {
+                                color: "#009800",
+                            }
+                        }
+                    }, {
+                        name: 'instance',
+                        itemStyle: {
+                            normal: {
+                                color: "#4592FF",
+                            }
+                        }
+                    }, {
+                        name: 'class',
+                        itemStyle: {
+                            normal: {
+                                color: "#C71585",
+                            }
+                        }
+                    }],
+                    label: {
+                        normal: {
+                            show: true,
+                            textStyle: {
+                                fontSize: 12,
+                            },
+                        }
+                    },
+                    force: {
+                        repulsion: 1000
+                    },
+                    edgeSymbolSize: [4, 50],
+                    edgeLabel: {
+                        normal: {
+                            show: true,
+                            textStyle: {
+                                fontSize: 10
+                            },
+                            formatter: "{c}"
+                        }
+                    },
+                    data: data,
+                    links: links,
+                    lineStyle: {
+                        normal: {
+                            opacity: 0.9,
+                            width: 1.3,
+                            curveness: 0,
+                            color: "#262626",
+                        }
+                    }
+                }
+            ]
+        };
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+
+    </script>
+</body>
+
+</html>

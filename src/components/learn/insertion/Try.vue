@@ -1,0 +1,566 @@
+<template>
+	<h1 id="试一试"><a href="#试一试" class="header-anchor">#</a>试一试</h1>
+	<p>
+		在下面的编辑框中在提示的位置实现排序方法，默认从小到大排列，并在最外层循环的结尾处输出排序数组，页面会加工输出信息以控制图中的小球顺序。
+	</p>
+	<p>
+		为了能使代码直接在浏览器中运行，这里要求用JavaScript语法实现算法。下面编辑框中列出了几条基本用法以作参考。想要了解更多JS知识，可以访问<a
+			class="inline-link"
+			href="https://www.runoob.com/js/js-tutorial.html"
+			>菜鸟教程</a
+		>或<a class="inline-link" href="https://cn.bing.com/search?q=JavaScript"
+			>其它网站</a
+		>。
+	</p>
+	<p>小球控制功能有时候可能会出现异常，保存好代码再刷新即可。</p>
+	<div class="ball-parent">
+		<div class="ball-btn">
+			<!-- <button class="btn-warning" @click="setBalls">生成随机数</button> -->
+			<button class="btn-warning" id="ball-play">播放</button>
+			<button class="btn-warning" id="ball-pause">暂停</button>
+			<button class="btn-warning" @click="changeHight(10)">增加高度</button>
+			<button class="btn-warning" @click="changeHight(-10)">降低高度</button>
+			<select v-model="playRate">
+				<option disabled value="">请选择播放速度</option>
+				<option>0.75</option>
+				<option>1</option>
+				<option>1.25</option>
+				<option>1.5</option>
+				<option>2</option>
+			</select>
+		</div>
+		<div class="balls">
+			<template v-for="ball in balls" :key="ball.id">
+				<div
+					:style="
+						'top:0px;background-color:' +
+							ball.color +
+							';left:' +
+							ball.left +
+							';width:' +
+							ball.width +
+							';height:' +
+							ball.width +
+							';border-radius:' +
+							ball.width +
+							';line-height:' +
+							ball.width
+					"
+					class="ball"
+					:id="'ball' + ball.id"
+					:alt="'ball_' + ball.id"
+				>
+					{{ ball.id }}
+				</div>
+			</template>
+		</div>
+	</div>
+	<div class="editor-parent">
+		<div class="editor-try">
+			<button class="btn-warning" @click="tryIt">运行</button>
+			<button class="btn-warning" @click="submit">提交</button>
+		</div>
+		<textarea class="editor" v-model="codes"></textarea>
+	</div>
+</template>
+
+<script lang="ts">
+	import { defineComponent } from "vue";
+	// import {TimelineMax} from "TimeLineMax";
+	import { gsap } from "gsap";
+
+	import CodeMirror from "codemirror/lib/codemirror"; // CodeMirror，必要
+	import "codemirror/lib/codemirror.css"; // css，必要
+	import "codemirror/theme/idea.css";
+	import "codemirror/addon/hint/show-hint.css";
+
+	import "codemirror/addon/hint/show-hint.js";
+	import "codemirror/mode/javascript/javascript.js";
+	import "codemirror/addon/hint/javascript-hint.js";
+	import "codemirror/addon/fold/brace-fold.js";
+
+	import "codemirror/addon/edit/closebrackets.js";
+	import "codemirror/addon/edit/closetag.js";
+	import "codemirror/addon/edit/matchbrackets.js";
+	import "codemirror/addon/edit/matchtags.js";
+	import { ElMessage } from "element-plus";
+	import { Statement } from "@xapi/xapi";
+	export default defineComponent({
+		data() {
+			return {
+				// pupular: 0,
+				popular: 0,
+				ballPlay: null,
+				ballPause: null,
+				playRate: "",
+				tl: null,
+				ballRenderFlag: false,
+				codes:
+					"//几个基本用法\n" +
+					"//数组长度: array.length\n" +
+					"//下标为i的元素: array[i]\n" +
+					"//定义常量: const a = 123;\n" +
+					"//定义变量: let a = 123; 或者 var a = 123;\n" +
+					"//判断语句: if ( a == 123 ) {  } else { }\n" +
+					"//循环语句: for (let index = 0; index < array.length; index++) { }\n" +
+					"//输出信息到浏览器控制台: console.log(XXX) //这里XXX是常量或变量\n" +
+					"function run( array )\n" +
+					"{\n" +
+					"    //为了显示效果，请在最外层循环中结束位置用console.log(array)语句输出array变量\n" +
+					"    //在这里编辑代码,编辑完成后点击运行按钮\n" +
+					"    for (let i = 1; i < array.length; i++)\n" +
+					// "    {\n" +
+					// "        if (array[i] < array[i-1])\n" +
+					// "        {\n" +
+					// "            let temp = array[i];\n" +
+					// "            array[i] = array[i-1];\n" +
+					// "            //顺序表结构使用从后往前查找无序序列\n" +
+					// "            //&& 短路与\n" +
+					// "            let j;\n" +
+					// "            for (j = i - 2; j >= 0 && temp < array[j]; j--)\n" +
+					// "                array[j+1] = array[j];\n" +
+					// "            array[j+1] = temp;\n" +
+					// "        }\n" +
+					// "     // 在结束位置array变量\n" +
+					"        console.log(array);\n" +
+					// "    }\n" +
+					"}\n",
+				balls: [],
+				initArr: [],
+				codeMirror: null,
+				right: false, // was the run result right
+				copyBall: null
+			};
+		},
+		watch: {
+			playRate: function(newVal) {
+				if (true == this.ballRenderFlag) {
+					this.tl.timeScale(newVal);
+				}
+			}
+		},
+		beforeUnmount() {
+			const stat: Statement = {
+				actor: {
+					name: this.$store.state.user.User.name,
+					mbox: "mailto:" + this.$store.state.user.User.email,
+					objectType: "Agent"
+				},
+				verb: {
+					id: "http://activitystrea.ms/schema/1.0/watch",
+					display: { "en-US": "watched", "zh-CN": "观看了" }
+				},
+				object: {
+					id: "http://example.com/activities/ball-sort-motion-graph",
+					definition: {
+						type: "http://activitystrea.ms/schema/1.0/video",
+						name: {
+							"zh-CN": "代码控制的小球移动过程"
+						}
+					},
+					objectType: "Activity"
+				},
+				result: {
+					response: JSON.stringify({"watchTimes": this.popular}),
+				}
+			};
+			this.$store.state.user.myXAPI.sendStatement(stat).then(
+				value => {
+					return true;
+				},
+				reason => {
+					ElMessage.error("网络或LRS好像出小差了！");
+				}
+			);
+		},
+		methods: {
+			async submit() {
+				const insist = await this.$confirm(
+					"此操作将发送数据至LRS, 是否继续?",
+					"提示",
+					{
+						confirmButtonText: "确定",
+						cancelButtonText: "取消",
+						type: "warning"
+					}
+				).then(
+					() => {
+						// console.log(res);
+						return true;
+					},
+					() => {
+						// console.log(reason);
+						return false;
+					}
+				);
+				if (insist == false) {
+					return;
+				}
+				const stat: Statement = {
+					actor: {
+						name: this.$store.state.user.User.name,
+						mbox: "mailto:" + this.$store.state.user.User.email,
+						objectType: "Agent"
+					},
+					verb: {
+						id: "http://activitystrea.ms/schema/1.0/complete",
+						display: { "en-US": "completed", "zh-CN": "完成了" }
+					},
+					object: {
+						id: "http://example.com/activities/insert-test",
+						definition: {
+							type: "http://adlnet.gov/expapi/activities/assessment",
+							name: {
+								"zh-CN": "用排序代码控制小球移动"
+							}
+						},
+						objectType: "Activity"
+					},
+					result: {
+						success: this.right,
+						response: this.codes
+					}
+				};
+				this.$store.state.user.myXAPI.sendStatement(stat).then(
+					value => {
+						return true;
+					},
+					reason => {
+						ElMessage.error("网络或LRS数据库好像出小差了！");
+					}
+				);
+			},
+			changeHight(val: number) {
+				const ele = document.getElementsByClassName("balls")[0] as HTMLElement;
+				const h = parseInt(getComputedStyle(ele)["height"]);
+				ele.style.cssText = "height:" + (h + val) + "px";
+			},
+			_ballPlay() {
+				if (false == this.ballRenderFlag) {
+					ElMessage.error("请先运行函数！");
+					return;
+				}
+				if (this.runBtnClicked == true) {
+					// this.$store.commit("popular/addBallPopular");
+					this.popular++;
+					this.runBtnClicked = false;
+				}
+				this.tl.play();
+			},
+			_ballPause() {
+				if (false == this.ballRenderFlag) {
+					ElMessage.error("请先运行函数！");
+					return;
+				}
+				this.tl.pause();
+			},
+			removeCopyEle() {
+				const copy = document.getElementsByClassName("fromCopy");
+				while (copy[0]) {
+					copy[0].parentNode.removeChild(copy[0]);
+				}
+				this.balls = [];
+				this.initArr = [];
+			},
+			//生成从minNum到maxNum的随机数
+			randomNum(minNum, maxNum) {
+				switch (arguments.length) {
+					case 1:
+						return Math.floor(Math.random() * minNum + 1);
+						break;
+					case 2:
+						return Math.floor(Math.random() * (maxNum - minNum + 1) + minNum);
+						break;
+					default:
+						return 0;
+						break;
+				}
+			},
+			randomHexColor() {
+				//随机生成十六进制颜色
+				return (
+					"#" +
+					("00000" + ((Math.random() * 0x1000000) << 0).toString(16)).substr(-6)
+				);
+			},
+			destoryed() {
+				this.ballRenderFlag = false;
+				this.tl?.clear();
+				this.tl = null;
+				//清空画面
+				this.removeCopyEle();
+			},
+			setBalls() {
+				this.destoryed();
+				const parent = document.getElementsByClassName("balls")[0] as HTMLElement;
+				const width = parseInt(getComputedStyle(parent)["width"]);
+				if (this.initArr.length == 0) {
+					this.initArr = [];
+					for (let i = 0; i < 10; ) {
+						const t = this.randomNum(1, 99);
+						let j;
+						// must get a different number or the animation will get wrong
+						for (j = 0; j < this.initArr.length; j++) {
+							if (t == this.initArr[j]) {
+								break;
+							}
+						}
+						if (j >= this.initArr.length) {
+							this.initArr.push(t);
+							++i;
+						}
+						// console.log(this.initArr);
+					}
+				}
+				// this.initArr = [87, 84, 12, 6, 74, 50, 88, 55, 93, 22];  // just for a special result
+				for (let i = 0; i < this.initArr.length; i++) {
+					const ball = { id: null, color: null, width: null, left: null };
+					ball.id = this.initArr[i];
+					ball.color = this.randomHexColor();
+					ball.width = width / this.initArr.length / 2 + "px";
+					ball.left =
+						(i * width) / this.initArr.length +
+						width / this.initArr.length / 4 +
+						"px";
+					this.balls.push(ball);
+				}
+			},
+			_copyBall() {
+				const eles = document.getElementsByClassName("ball");
+				for (const ele of eles) {
+					const copy = ele.cloneNode(true) as HTMLElement;
+					copy.removeAttribute("id");
+					copy.removeAttribute("class");
+					copy.setAttribute("class", "fromCopy");
+					ele.parentNode.appendChild(copy);
+				}
+			},
+			// function run( a )
+			// {
+			//     const dlta = [5,3,2,1];
+			//     for (let j = 0; j < 4; j++)
+			//     {
+			//         for (let i = dlta[j]; i < 10; i++)
+			//         if (a[i] < a[i-dlta[j]])
+			//         {
+			//             const temp = a[i];
+			//             a[i] = a[i-dlta[j]];
+			//             let k;
+			//             for(k=i-(2*dlta[j]);k>=0&&temp<a[k]; k-=dlta[j])
+			//                 a[k+dlta[j]] = a[k];
+			//             a[k+dlta[j]] = temp;
+			//         }
+			//         console.log(a);
+			//     }
+			// }
+			async tryIt() {
+				this.runBtnClicked = true;
+				this.codeMirror.save();
+				this.codes = this.codeMirror.getValue();
+				this.setBalls();
+				const ballId = [];
+				for (let i = 0; i < this.balls.length; i++) {
+					ballId.push(this.balls[i].id);
+				}
+				const myLog = console.log;
+				let output = "";
+				console.log = function(str) {
+					myLog(str);
+					// myLog(typeof str);
+
+					if (str instanceof Array) {
+						if (output == "") {
+							output = JSON.stringify(str);
+						} else {
+							output += ";" + JSON.stringify(str);
+						}
+					} else {
+						ElMessage.error("失败，请在函数中输出每一趟排序的数组结果！");
+						return;
+					}
+				};
+				eval("(" + this.codes + ")(" + JSON.stringify(ballId) + ")");
+				console.log = myLog;
+				// console.log(output);
+				const sequenceString = output.split(";");
+				// console.log(sequenceString.length)
+				// console.log(sequenceString)
+				const sequence = [];
+
+				let flag = false;
+				for (let i = 0; i < sequenceString.length; i++) {
+					if (/\[[0-9]{1,3}(,[0-9]{1,3})*\]/.test(sequenceString[i])) {
+						sequence.push(JSON.parse(sequenceString[i]));
+					} else {
+						flag = true;
+						break;
+					}
+				}
+				if (flag == true) {
+					ElMessage.error("函数输出信息格式错误，请检查一下代码！");
+					return;
+				}
+				// console.log("ballif");
+				// console.log(ballId);
+
+				sequence.splice(0, 0, ballId);
+				// console.log(sequence);
+				// console.log("1");
+				for (let i = 0; i < sequence[sequence.length - 1].length - 1; i++) {
+					if (
+						sequence[sequence.length - 1][i] >
+						sequence[sequence.length - 1][i + 1]
+					) {
+						ElMessage.error("代码好像有问题哟！");
+						this.right = false;
+						break;
+					} else {
+						this.right = true;
+					}
+				}
+				await new Promise<void>((resolve, reject) => {
+					setTimeout(() => {
+						const ele = document.getElementById("ball" + sequence[0][0]);
+						if (ele) {
+							// console.log(ele.id);
+
+							resolve();
+						}
+					}, 500);
+				});
+				const ballEle = document.getElementsByClassName("ball")[0] as HTMLElement;
+				const ballWidth = parseInt(getComputedStyle(ballEle)["width"]);
+				// const tl = new TimelineMax({paused: true});
+				const tl = gsap.timeline({ paused: true });
+				for (let i = 1; i < sequence.length; i++) {
+					tl.add(this.copyBall, "+=0");
+					const result = sequence[i];
+					for (let j = 0; j < result.length; j++) {
+						let previousIndex = 0;
+						for (
+							previousIndex = 0;
+							previousIndex < sequence[i - 1].length;
+							previousIndex++
+						) {
+							// 肯定能找到一个
+							if (sequence[i - 1][previousIndex] == result[j]) {
+								break;
+							}
+						}
+						const x = (j - previousIndex) * ballWidth * 2;
+						const y = "+=" + (ballWidth * 3) / 2 + "px";
+						// console.log("y ====== "+y);
+
+						let xx;
+						if (x >= 0) {
+							xx = "+=" + x + "px";
+						} else {
+							xx = "-=" + -x + "px";
+						}
+						// console.log("xx = ===== "+xx);
+
+						tl.to("#ball" + result[j], { duration: 1, x: xx, top: y }, ">");
+					}
+				}
+				this.tl = tl;
+				this.ballRenderFlag = true;
+				ElMessage.success("成功执行！小球轨迹初始化完成！");
+				// console.log(this.tl);
+			}
+		},
+		mounted() {
+			this.copyBall = this._copyBall.bind(this);
+			this.setBalls();
+			const editor = document.getElementsByClassName("editor")[0] as HTMLElement;
+			const options = {
+				mode: "javascript",
+				theme: "idea",
+				tabSize: 4, // tab的空格个数
+				// theme: "dracula", //主题样式
+				lineNumbers: true, //是否显示行数
+				lineWrapping: true, //是否自动换行
+				styleActiveLine: true, //line选择是是否加亮
+				indentUnit: 4,
+				viewportMargin: 40,
+				gutters: { style: "background-color: blue" },
+				autoCloseBrackets: true,
+				matchBrackets: true,
+				autoCloseTags: true,
+				hintOptions: {
+					// 是否在只有一个提示项时自动补全，如输入SEL会自动SELECT
+					completeSingle: false
+				}
+			};
+			this.codeMirror = CodeMirror.fromTextArea(editor, options);
+			this.codeMirror.on("cursorActivity", this.destoryed);
+			this.ballPlay = this._ballPlay.bind(this);
+			this.ballPause = this._ballPause.bind(this);
+			document
+				.getElementById("ball-play")
+				.addEventListener("click", this.ballPlay);
+			document
+				.getElementById("ball-pause")
+				.addEventListener("click", this.ballPause);
+		}
+	});
+</script>
+
+<style>
+	.CodeMirror {
+		border: 1px solid #f3e2c2;
+		background-color: #f3e2c2;
+		height: auto;
+	}
+	.CodeMirror-gutters {
+		background-color: silver;
+		color: black;
+	}
+</style>
+<style scoped>
+	.ball-parent {
+		position: relative;
+		width: 100%;
+		min-height: 12rem;
+		height: fit-content;
+		background-color: #f3e2c2;
+		padding: 0.5rem;
+		line-height: 1.7;
+		margin-top: 2rem;
+		-webkit-margin-before: 1em;
+		margin-block-start: 1em;
+		-webkit-margin-after: 1em;
+		margin-block-end: 1em;
+		-webkit-margin-start: 0;
+		margin-inline-start: 0;
+		-webkit-margin-start: 0;
+		margin-inline-end: 0;
+	}
+	.ball-parent .ball-btn {
+		position: relative;
+	}
+	.balls {
+		position: relative;
+		top: 0.5rem;
+		height: 10rem;
+		overflow-y: auto;
+	}
+	.fromCopy {
+		position: absolute;
+		margin: auto;
+		text-align: center;
+	}
+	.ball {
+		position: absolute;
+		margin: auto;
+		text-align: center;
+	}
+	.editor-parent {
+		position: relative;
+	}
+	.editor-try {
+		position: absolute;
+		right: 0.2rem;
+		top: 0.2rem;
+		z-index: 99;
+	}
+</style>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .parent {
+            position: relative;
+            height: 30vh;
+            width: 50vw;
+        }
+        img {
+            position: absolute;
+            --width: 10%;
+            width: var(--width);
+            top: 1rem;
+            right: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="parent">
+            <div class="card-btn">
+                <button id="play">播放</button>
+                <button id="pause">暂停</button>
+                <button id="reverse">倒退</button>
+                <button id="restart">重放</button>
+                <select v-model="playRate">
+                    <option disabled value="">请选择</option>
+                    <option>0.75</option>
+                    <option>1</option>
+                    <option>1.25</option>
+                    <option>1.5</option>
+                    <option>2</option>
+                </select>
+            </div>
+            <template v-for=" (item, index) in items" :key="index">
+                <img :id="item.id" :src="item.img" alt="">
+            </template>
+        </div>
+    </div>
+    <script src="./gsap.min.js"></script>
+    <script src="./vue.global.js"></script>
+    <script>
+        const app = {
+            data() {
+                const path = "../assets/img/heartsgroup/";
+                const type = ".svg";
+                const tl = null;
+                const order = [];
+                const notOrder = [13, 10, 9, 4, 1, 8, 6, 2, 11, 3, 5, 12, 7]
+                const items = []
+                return {
+                    order,
+                    notOrder,
+                    items,
+                    tl,
+                    path,
+                    type,
+                    playRate: 1,
+                    cardRenderFlag: false,
+                }
+            },
+            methods: {
+                cardRun() {
+                    console.log('into run');
+                    const parent = document.getElementsByClassName('parent')[0];
+                    const img = document.getElementsByTagName('img')[0];
+                    const pWidth = parseInt(getComputedStyle(parent)['width'])
+                    const pHeight = parseInt(getComputedStyle(parent)['height'])
+                    const imgWidth = parseInt(getComputedStyle(img)['width'])
+                    const imgHeight = parseInt(getComputedStyle(img)['height'])
+                    const tl = gsap.timeline({ paused: true });
+                    for (let i = 0; i < this.notOrder.length; i++) {
+                        const key = this.notOrder[i];
+                        const y = pHeight - 2 * imgHeight;
+                        if (this.order.length == 0) {
+                            const x = pWidth / 2 + imgWidth * (this.order.length - 1) / 2;
+                            tl.to('#img_' + key, { left: x, top: y, duration: 1 }, ">")
+                        } else {
+                            const x = imgWidth * this.order.length / 2 + pWidth / 2
+                            tl.to('#img_' + key, { left: x, top: y, duration: 1 }, ">")
+                        }
+                        let j = this.order.length - 1;
+                        for (; j >= 0; j--) {
+                            tl.to('#img_' + this.order[j], { duration: 1, boxShadow: "0px 0px 2px 1px red" }, ">")
+                            tl.to('#img_' + this.order[j], { duration: 1, boxShadow: "" }, ">")
+                            if (key < this.order[j]) {
+                                tl.to('#img_' + this.order[j], { x: "+=" + imgWidth, duration: 0.5 }, ">")
+                                tl.to('#img_' + key, { x: "-=" + imgWidth, duration: 0.5 }, "-=0.2")
+                            }
+                            else {
+                                tl.to('#img_' + key, { y: "+=" + imgHeight, duration: 0.5 }, ">")
+                                this.order.splice(j + 1, 0, key)
+                                break;
+                            }
+                        }
+                        if (j == -1) {
+                            tl.to('#img_' + key, { y: "+=" + imgHeight, duration: 0.5 }, ">")
+                            this.order.splice(0, 0, key)
+                        }
+                        if (this.order.length > 1) {
+                            const selector = "#img_" + this.order.join(",#img_");
+                            tl.to(selector, { left: "-=" + (imgWidth / 2), duration: 0.5 }, ">")
+                        }
+                    }
+                    this.tl = tl;
+                },
+            },
+            watch: {
+                playRate: function(newVal){
+                    if (true == this.cardRenderFlag) {
+                        this.tl.timeScale(this.playRate);
+                    } 
+                }
+            },
+            mounted() {
+                console.log('mounted');
+
+
+                for (let i = 0; i < this.notOrder.length; i++) {
+                    console.log('in loop');
+                    const fullPath = this.path + "" + this.notOrder[i] + "" + this.type;
+                    // console.log(fullPath);
+
+                    this.items.push({ img: fullPath, id: "img_" + this.notOrder[i] });
+                }
+                document.getElementById('play').addEventListener('click', () => {
+                    if (false == this.cardRenderFlag) { this.cardRenderFlag = true, this.cardRun() } this.tl.play()
+                });
+                document.getElementById('pause').addEventListener('click', () => { if (false == this.cardRenderFlag) { this.cardRenderFlag = true, this.cardRun() } this.tl.pause() });
+                document.getElementById('reverse').addEventListener('click', () => { if (false == this.cardRenderFlag) { this.cardRenderFlag = true, this.cardRun() } this.tl.reverse() });
+                document.getElementById('restart').addEventListener('click', () => { if (false == this.cardRenderFlag) { this.cardRenderFlag = true, this.cardRun() } this.tl.restart() });
+                // document.getElementById('scale').addEventListener('click',() => { if (false == this.cardRenderFlag) { this.cardRenderFlag = true, this.cardRun() } this.tl.timeScale(this.input) });
+            },
+        }
+        Vue.createApp(app).mount('#app')
+    </script>
+</body>
+
+</html>

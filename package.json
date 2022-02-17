@@ -1,0 +1,50 @@
+{
+  "name": "demo3",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@ht2-labs/xapi-js-client": "^1.21.0",
+    "@lrnwebcomponents/lrs-elements": "^3.0.6",
+    "@types/codemirror": "0.0.108",
+    "@xapi/xapi": "^1.2.0",
+    "axios": "^0.21.1",
+    "codemirror": "^5.60.0",
+    "core-js": "^3.6.5",
+    "echarts": "^5.0.2",
+    "element-plus": "^1.0.2-beta.33",
+    "gsap": "^3.6.1",
+    "minimist": "^1.2.5",
+    "mkdirp": "^1.0.4",
+    "popper.js": "^1.16.1",
+    "tobase64": "^1.0.4",
+    "vue": "^3.0.0",
+    "vue-router": "^4.0.0-0",
+    "vuescroll": "^4.17.3",
+    "vuex": "^4.0.0",
+    "xapiwrapper": "^1.11.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-modules-umd": "^7.13.0",
+    "@types/jquery": "^3.5.5",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "^4.5.12",
+    "@vue/cli-plugin-typescript": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/compiler-sfc": "^3.0.0",
+    "@vue/eslint-config-typescript": "^5.0.2",
+    "babel-plugin-import": "^1.13.3",
+    "bootstrap": "^4.6.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^7.0.0-0",
+    "jquery": "^3.6.0",
+    "typescript": "~3.9.3"
+  }
+}
